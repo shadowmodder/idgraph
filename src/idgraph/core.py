@@ -61,6 +61,27 @@ class IdentityGraph:
                 out[field].add(value)
         return {f: sorted(v) for f, v in out.items()}
 
+    def risk_score(self, accounts):
+        """Heuristic ring risk 0–1: driven by cluster size and overlapping signal values."""
+        accounts = set(accounts)
+        if len(accounts) < 2:
+            return 0.0
+        shared = self.shared_signals(accounts)
+        signal_count = sum(len(v) for v in shared.values())
+        size_factor = min(len(accounts) / 20.0, 1.0)
+        sig_factor = min(signal_count / 5.0, 1.0)
+        return round((size_factor + sig_factor) / 2.0, 4)
+
+    def edge_list(self):
+        """Return (account_a, account_b, field, value) tuples for every shared signal pair."""
+        edges = []
+        for (field, value), accts in self.signal_index.items():
+            accts = sorted(accts)
+            for i in range(len(accts)):
+                for j in range(i + 1, len(accts)):
+                    edges.append((accts[i], accts[j], field, value))
+        return edges
+
     def find_rings(self, min_size=3):
         """Connected components of >= min_size, with the signals that bind them."""
         rings = []

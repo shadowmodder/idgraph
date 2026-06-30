@@ -13,6 +13,30 @@ def test_ring_via_shared_device_and_email():
     assert "device" in rings[0]["shared_signals"]
 
 
+def test_risk_score_ring():
+    g = IdentityGraph()
+    g.add_account("a1", {"device": "D1", "email": "x@e.com"})
+    g.add_account("a2", {"device": "D1", "email": "y@e.com"})
+    g.add_account("a3", {"device": "D1"})
+    score = g.risk_score({"a1", "a2", "a3"})
+    assert score > 0.0
+
+
+def test_risk_score_singleton():
+    g = IdentityGraph()
+    g.add_account("solo", {"device": "D1"})
+    assert g.risk_score({"solo"}) == 0.0
+
+
+def test_edge_list():
+    g = IdentityGraph()
+    g.add_account("a", {"device": "D1"})
+    g.add_account("b", {"device": "D1"})
+    edges = g.edge_list()
+    assert len(edges) >= 1
+    assert edges[0][2] == "device"
+
+
 def test_independent_accounts_not_linked():
     g = IdentityGraph()
     g.add_account("a", {"device": "D1"})
